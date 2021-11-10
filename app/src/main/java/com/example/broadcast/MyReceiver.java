@@ -1,6 +1,7 @@
 package com.example.broadcast;
 
 import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -20,11 +21,12 @@ public class MyReceiver extends BroadcastReceiver {
     private static final String SMS_RECEIVED = "android.provider.Telephony.SMS_RECEIVED";
     private static final String TAG = "SmsBroadcastReceiver";
     String msg, phoneNo;
-    NotificationManagerCompat notificationManager;
 
     @Override
     public void onReceive(Context context, Intent intent) {
+
         Log.i(TAG, "intenr received:"+ intent.getAction());
+
         if (intent.getAction() == SMS_RECEIVED){
             Bundle dataBundle = intent.getExtras();
             if (dataBundle != null){
@@ -41,22 +43,26 @@ public class MyReceiver extends BroadcastReceiver {
                     phoneNo = message[i].getOriginatingAddress();
                 }
                 Toast.makeText(context , "Message: "+ msg+ "\nNumber: "+ phoneNo, Toast.LENGTH_LONG).show();
+
+
+                Intent intent1 = new Intent(context, MyReceiver.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent1, 0);
+
+                Notification notification = new NotificationCompat.Builder(context, App.CHANNEL_1_ID)
+                        .setSmallIcon(R.drawable.ic_one)
+                        .setContentTitle(phoneNo)
+                        .setContentText(msg)
+                        .setPriority(NotificationCompat.PRIORITY_HIGH)
+                        .setContentIntent(pendingIntent)
+                        .setAutoCancel(true)
+                        .setOnlyAlertOnce(true)
+                        .setColor(Color.BLUE)
+                        .setCategory(NotificationCompat.CATEGORY_MESSAGE).build();
+
+                NotificationManager mNotificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 //
-//                Intent activityIntent = new Intent(context, MainActivity.class);
-//                PendingIntent contentIntent = PendingIntent.getActivity(context, 0 , activityIntent,0);
-//
-//                Notification notification = new NotificationCompat.Builder(context, App.CHANNEL_1_ID)
-//                        .setSmallIcon(R.drawable.ic_one)
-//                        .setContentTitle(phoneNo)
-//                        .setContentText(msg)
-//                        .setPriority(NotificationCompat.PRIORITY_HIGH)
-//                        .setContentIntent(contentIntent)
-//                        .setAutoCancel(true)
-//                        .setOnlyAlertOnce(true)
-//                        .setColor(Color.BLUE)
-//                        .setCategory(NotificationCompat.CATEGORY_MESSAGE).build();
-//
-//                notificationManager.notify(1, notification);
+                mNotificationManager.notify(1, notification);
             }
         }
     }
